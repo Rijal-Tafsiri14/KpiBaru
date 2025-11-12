@@ -1,71 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPI Dashboard Order</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPI Order Dashboard</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="container">
-    
+    <header>
+      <h1>KPI Order Dashboard</h1>
+      <div class="upload-section">
+        <label for="fileInput" class="file-label">📁 Upload File Excel</label>
+        <input type="file" id="fileInput" accept=".xlsx, .xls">
+        <label>Threshold (jam):</label>
+        <input type="number" id="thresholdInput" value="24" min="1">
+      </div>
+    </header>
 
-    <div class="controls">
-      <label>Upload Excel File:
-        <input type="file" id="fileInput" accept=".xlsx, .xls" />
-      </label>
-      <label>Threshold (jam):
-        <input type="number" id="thresholdInput" value="24" />
-      </label>
-    </div>
-<h1>📊 Dashboard KPI Order Bazaar </h1>
-    <canvas id="pieChart"></canvas>
+    <section class="chart-section">
+      <canvas id="pieChart"></canvas>
+    </section>
 
-    <h2>KPI Summary per Tanggal</h2>
-    <div class="table-container">
-      <table id="summaryTable">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Total Order</th>
-            <th>Total Order Item</th>
-            <th>Total Qty</th>
-            <th>Total Achieve</th>
-            <th>Total Gagal</th>
-            <th>Persentase (%)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-<div class="reason-controls">
-  <h3>Reason Gagal</h3>
-  <button id="downloadReason" class="btn">⬇️ Download Reason</button>
-  <input type="file" id="uploadReason" accept=".xlsx" class="btn-upload">
-</div>
+    <section class="summary-section">
+      <h2>Summary KPI per Tanggal</h2>
+      <div class="table-container">
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Total Order</th>
+              <th>Total Order Item</th>
+              <th>Total Qty</th>
+              <th>Achieve</th>
+              <th>Gagal</th>
+              <th>Persentase (%)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-    <h2>Detail Order Gagal</h2>
-    <div class="table-container">
-      <table id="failedTable">
-        <thead>
-  <tr>
-    <th>Order ID</th>
-    <th>Order Item ID</th>
-    <th>SKU</th>
-    <th>Naming</th>
-    <th>Qty</th>
-    <th>Order Date</th>
-    <th>Last Process Date</th>
-    <th>Durasi (jam)</th>
-    <th>Reason Gagal</th>
-  </tr>
-</thead>
-
-        <tbody></tbody>
-      </table>
-    </div>
+    <section class="failed-section">
+      <div class="reason-controls">
+        <h2>Detail Order Gagal</h2>
+        <div class="buttons">
+          <button id="downloadReason" class="btn">⬇️ Download Template Reason</button>
+          <input type="file" id="uploadReason" accept=".xlsx" class="btn-upload">
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="failedTable">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Order Item ID</th>
+              <th>SKU</th>
+              <th>Naming</th>
+              <th>Qty</th>
+              <th>Order Date</th>
+              <th>Last Process Date</th>
+              <th>Durasi (Jam)</th>
+              <th>Reason Gagal</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <script src="script.js"></script>
