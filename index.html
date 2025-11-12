@@ -9,15 +9,23 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <div class="container">
+  <div class="top-controls">
     <header>
       <h1>KPI Order Dashboard</h1>
-      <div class="upload-section">
-        <label for="fileInput" class="file-label">📁 Upload File Excel</label>
-        <input type="file" id="fileInput" accept=".xlsx, .xls">
-        <label>Threshold (jam):</label>
-        <input type="number" id="thresholdInput" value="24" min="1">
-      </div>
+      <div>
+    <label>Upload Excel File:</label>
+    <input type="file" id="fileInput" accept=".xlsx, .xls">
+  </div>
+  <div>
+    <label>Threshold (jam):</label>
+    <input type="number" id="thresholdInput" value="24" min="1">
+  </div>
+  <div>
+    <button id="downloadReasonBtn">Download Reason Gagal</button>
+    <label>Upload Reason Gagal:</label>
+    <input type="file" id="reasonUpload" accept=".xlsx, .xls">
+  </div>
+</div>
     </header>
 
     <section class="chart-section">
@@ -76,3 +84,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
