@@ -4,10 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const summaryTable = document.querySelector("#summaryTable tbody");
   const failedTable = document.querySelector("#failedTable tbody");
   const pieChartCanvas = document.getElementById("pieChart");
-  let pieChart;
-let lastData = []; // simpan data terakhir yang diupload
+  const downloadBtn = document.getElementById("downloadReason");
+  const uploadInput = document.getElementById("uploadReason");
+  
+  let pieChart, lastData = [], lastFailedData = [];
 
-  // Parsing tanggal dari Excel (baik string atau serial)
+  // --- Fungsi parsing tanggal dari Excel ---
   function parseExcelDate(value) {
     if (!value) return null;
     if (typeof value === "number") {
@@ -23,28 +25,26 @@ let lastData = []; // simpan data terakhir yang diupload
     return null;
   }
 
-  // Event saat file di-upload
+  // --- Saat file diupload ---
   fileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-  const data = new Uint8Array(event.target.result);
-  const workbook = XLSX.read(data, { type: "array" });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const json = XLSX.utils.sheet_to_json(worksheet);
-  lastData = json; // simpan data ke variabel global
-  processData(json);
-};
-thresholdInput.addEventListener("input", () => {
-  if (lastData.length > 0) {
-    processData(lastData);
-  }
-});
-
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+      lastData = json;
+      processData(json);
+    };
     reader.readAsArrayBuffer(file);
+  });
+
+  thresholdInput.addEventListener("input", () => {
+    if (lastData.length > 0) processData(lastData);
   });
 
   function processData(rows) {
@@ -97,7 +97,6 @@ thresholdInput.addEventListener("input", () => {
     Object.keys(data).forEach((date) => {
       const s = data[date];
       const percent = ((s.achieve / s.totalOrder) * 100).toFixed(2);
-
       const row = `
         <tr>
           <td>${date}</td>
@@ -107,15 +106,14 @@ thresholdInput.addEventListener("input", () => {
           <td>${s.achieve}</td>
           <td>${s.failed}</td>
           <td>${percent}%</td>
-        </tr>
-      `;
+        </tr>`;
       summaryTable.insertAdjacentHTML("beforeend", row);
 
       Object.keys(totalAll).forEach((k) => totalAll[k] += s[k]);
     });
 
     const totalPercent = ((totalAll.achieve / totalAll.totalOrder) * 100).toFixed(2);
-    const totalRow = `
+    summaryTable.insertAdjacentHTML("beforeend", `
       <tr class="total-row">
         <td><b>TOTAL</b></td>
         <td>${totalAll.totalOrder}</td>
@@ -124,59 +122,46 @@ thresholdInput.addEventListener("input", () => {
         <td>${totalAll.achieve}</td>
         <td>${totalAll.failed}</td>
         <td><b>${totalPercent}%</b></td>
-      </tr>
-    `;
-    summaryTable.insertAdjacentHTML("beforeend", totalRow);
+      </tr>`);
 
     updatePieChart(totalAll.achieve, totalAll.failed);
   }
 
   function renderFailedTable(data) {
-  failedTable.innerHTML = "";
+    failedTable.innerHTML = "";
+    lastFailedData = data;
+    const savedReasons = JSON.parse(localStorage.getItem("reasons") || "{}");
 
-  // Ambil data reason lama dari localStorage (kalau ada)
-  const savedReasons = JSON.parse(localStorage.getItem("reasons") || "{}");
-
-  data.forEach((item, index) => {
-    const key = `${item.orderId}_${item.orderItemId}`;
-    const savedReason = savedReasons[key] || "";
-
-    const row = `
-  <tr>
-    <td>${item.orderId}</td>
-    <td>${item.orderItemId}</td>
-    <td>${item.sku}</td>
-    <td>${item.naming}</td>
-    <td>${item.qty}</td>
-    <td>${item.orderDate}</td>
-    <td>${item.lastDate}</td>
-    <td>${item.diff}</td>
-    <td>
-      <textarea class="reason-input"
-                data-key="${key}"
-                placeholder="Isi reason..."
-                rows="2">${savedReason}</textarea>
-    </td>
-  </tr>
-    `;
-    failedTable.insertAdjacentHTML("beforeend", row);
-  });
-
-  // Tambahkan event listener ke semua input reason
-  document.querySelectorAll(".reason-input").forEach(input => {
-    input.addEventListener("input", (e) => {
-      const key = e.target.dataset.key;
-      savedReasons[key] = e.target.value;
-      localStorage.setItem("reasons", JSON.stringify(savedReasons));
+    data.forEach((item) => {
+      const key = `${item.orderId}_${item.orderItemId}`;
+      const savedReason = savedReasons[key] || "";
+      const row = `
+        <tr>
+          <td>${item.orderId}</td>
+          <td>${item.orderItemId}</td>
+          <td>${item.sku}</td>
+          <td>${item.naming}</td>
+          <td>${item.qty}</td>
+          <td>${item.orderDate}</td>
+          <td>${item.lastDate}</td>
+          <td>${item.diff}</td>
+          <td><textarea class="reason-input" data-key="${key}" rows="2">${savedReason}</textarea></td>
+        </tr>`;
+      failedTable.insertAdjacentHTML("beforeend", row);
     });
-  });
-}
 
+    document.querySelectorAll(".reason-input").forEach(input => {
+      input.addEventListener("input", (e) => {
+        const key = e.target.dataset.key;
+        savedReasons[key] = e.target.value;
+        localStorage.setItem("reasons", JSON.stringify(savedReasons));
+      });
+    });
+  }
 
   function updatePieChart(achieve, failed) {
     const ctx = pieChartCanvas.getContext("2d");
     if (pieChart) pieChart.destroy();
-
     pieChart = new Chart(ctx, {
       type: "doughnut",
       data: {
@@ -196,56 +181,58 @@ thresholdInput.addEventListener("input", () => {
       }
     });
   }
-});
-// === FITUR EXPORT & IMPORT REASON ===
-const downloadBtn = document.getElementById("downloadReason");
-const uploadInput = document.getElementById("uploadReason");
 
-// ✅ Download Reason ke Excel
-downloadBtn.addEventListener("click", () => {
-  const savedReasons = JSON.parse(localStorage.getItem("reasons") || "{}");
-  const reasonArray = Object.entries(savedReasons).map(([key, reason]) => {
-    const [orderId, orderItemId] = key.split("_");
-    return { "Order ID": orderId, "Order Item ID": orderItemId, "Reason": reason };
+  // === FITUR DOWNLOAD & UPLOAD REASON ===
+  downloadBtn.addEventListener("click", () => {
+    if (lastFailedData.length === 0) {
+      alert("Tidak ada data gagal untuk diunduh!");
+      return;
+    }
+    const savedReasons = JSON.parse(localStorage.getItem("reasons") || "{}");
+    const exportData = lastFailedData.map(item => {
+      const key = `${item.orderId}_${item.orderItemId}`;
+      return {
+        "Order ID": item.orderId,
+        "Order Item ID": item.orderItemId,
+        "SKU": item.sku,
+        "Naming": item.naming,
+        "Qty": item.qty,
+        "Order Date": item.orderDate,
+        "Last Process Date": item.lastDate,
+        "Diff (Jam)": item.diff,
+        "Reason": savedReasons[key] || ""
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Failed_Orders");
+    XLSX.writeFile(wb, "Template_Reason_Gagal.xlsx");
   });
 
-  if (reasonArray.length === 0) {
-    alert("Belum ada reason tersimpan!");
-    return;
-  }
+  uploadInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const ws = XLSX.utils.json_to_sheet(reasonArray);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Reasons");
-  XLSX.writeFile(wb, "reason_gagal.xlsx");
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+
+      const newReasons = {};
+      json.forEach((r) => {
+        if (r["Order ID"] && r["Order Item ID"]) {
+          const key = `${r["Order ID"]}_${r["Order Item ID"]}`;
+          newReasons[key] = r["Reason"] || "";
+        }
+      });
+
+      localStorage.setItem("reasons", JSON.stringify(newReasons));
+      alert("Reason berhasil diunggah dan diperbarui!");
+      if (lastFailedData.length > 0) renderFailedTable(lastFailedData);
+    };
+    reader.readAsArrayBuffer(file);
+  });
 });
-
-// ✅ Upload Reason dari Excel
-uploadInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const data = new Uint8Array(event.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json(worksheet);
-
-    const newReasons = {};
-    json.forEach((r) => {
-      if (r["Order ID"] && r["Order Item ID"]) {
-        const key = `${r["Order ID"]}_${r["Order Item ID"]}`;
-        newReasons[key] = r["Reason"] || "";
-      }
-    });
-
-    localStorage.setItem("reasons", JSON.stringify(newReasons));
-    alert("Reason berhasil diunggah!");
-    if (lastData.length > 0) processData(lastData); // refresh tabel gagal
-  };
-
-  reader.readAsArrayBuffer(file);
-});
-
