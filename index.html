@@ -13,23 +13,6 @@
     <h1>KPI Dashboard</h1>
   </header>
 
-  <section class="controls">
-    <div class="control-group">
-      <label for="fileInput">📂 Upload File KPI:</label>
-      <input type="file" id="fileInput" accept=".xlsx, .xls">
-    </div>
-
-    <div class="control-group">
-      <label for="thresholdInput">⏱ Threshold (jam):</label>
-      <input type="number" id="thresholdInput" value="24" min="1">
-    </div>
-
-    <div class="control-group">
-      <button id="downloadReasonBtn">⬇️ Download Reason Gagal</button>
-      <label for="reasonUpload" class="upload-label">⬆️ Upload Reason Gagal:</label>
-      <input type="file" id="reasonUpload" accept=".xlsx, .xls">
-    </div>
-  </section>
 
   <main>
     <div class="chart-container">
@@ -76,9 +59,27 @@
   </main>
 
   <footer>
-    <p>📦 KPI Tracking Dashboard — made with ❤️ by Rijal & Team</p>
+      <section class="controls">
+    <div class="control-group">
+      <label for="fileInput">📂 Upload File KPI:</label>
+      <input type="file" id="fileInput" accept=".xlsx, .xls">
+    </div>
+
+    <div class="control-group">
+      <label for="thresholdInput">⏱ Threshold (jam):</label>
+      <input type="number" id="thresholdInput" value="24" min="1">
+    </div>
+
+    <div class="control-group">
+      <button id="downloadReasonBtn">⬇️ Download Reason Gagal</button>
+      <label for="reasonUpload" class="upload-label">⬆️ Upload Reason Gagal:</label>
+      <input type="file" id="reasonUpload" accept=".xlsx, .xls">
+    </div>
+  </section>
+
   </footer>
 
   <script src="script.js"></script>
 </body>
 </html>
+
